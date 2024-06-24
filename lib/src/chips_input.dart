@@ -4,7 +4,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
+import 'package:flutter/foundation.dart';
 import 'suggestions_box_controller.dart';
 import 'text_cursor.dart';
 
@@ -133,7 +133,7 @@ class ChipsInputState<T> extends State<ChipsInput<T>>
     _focusNode.addListener(_handleFocusChanged);
     _nodeAttachment = _focusNode.attach(context);
 
-    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       _initOverlayEntry();
       if (mounted && widget.autofocus) {
         FocusScope.of(context).autofocus(_focusNode);
@@ -292,9 +292,9 @@ class ChipsInputState<T> extends State<ChipsInput<T>>
 
   void _scrollToVisible() {
     Future.delayed(const Duration(milliseconds: 300), () {
-      WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
         final renderBox = context.findRenderObject() as RenderBox;
-        await Scrollable.of(context)?.position.ensureVisible(renderBox);
+        await Scrollable.of(context).position.ensureVisible(renderBox);
       });
     });
   }
@@ -337,6 +337,9 @@ class ChipsInputState<T> extends State<ChipsInput<T>>
         }
         _updateTextInputState(putText: putText);
       } else {
+        if (kIsWeb) {
+          _onSearchChanged(_value.normalCharactersText);
+        }
         _updateTextInputState();
       }
       _onSearchChanged(_value.normalCharactersText);
@@ -349,12 +352,12 @@ class ChipsInputState<T> extends State<ChipsInput<T>>
             "${replaceText ? '' : _value.normalCharactersText}" +
             putText;
     setState(() {
-      final textLength = updatedText.characters.length;
+      final textLength = updatedText.length;
       final replacedLength = _chips.length;
       _value = _value.copyWith(
         text: updatedText,
         selection: TextSelection.collapsed(offset: textLength),
-        composing: (Platform.isIOS || replacedLength == textLength)
+        composing: (!kIsWeb && Platform.isIOS || replacedLength == textLength)
             ? TextRange.empty
             : TextRange(
                 start: replacedLength,
@@ -438,7 +441,7 @@ class ChipsInputState<T> extends State<ChipsInput<T>>
                 maxLines: 1,
                 overflow: widget.textOverflow,
                 style: widget.textStyle ??
-                    theme.textTheme.subtitle1?.copyWith(height: 1.5),
+                    theme.textTheme.titleMedium?.copyWith(height: 1.5),
               ),
             ),
             Flexible(
@@ -452,7 +455,7 @@ class ChipsInputState<T> extends State<ChipsInput<T>>
 
     return NotificationListener<SizeChangedLayoutNotification>(
       onNotification: (SizeChangedLayoutNotification val) {
-        WidgetsBinding.instance?.addPostFrameCallback((_) async {
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
           _suggestionsBoxController.overlayEntry?.markNeedsBuild();
         });
         return true;
@@ -485,5 +488,34 @@ class ChipsInputState<T> extends State<ChipsInput<T>>
         ),
       ),
     );
+  }
+
+  @override
+  void insertTextPlaceholder(Size size) {
+    // TODO: implement insertTextPlaceholder
+  }
+
+  @override
+  void removeTextPlaceholder() {
+    // TODO: implement removeTextPlaceholder
+  }
+
+  @override
+  void showToolbar() {
+    // TODO: implement showToolbar
+  }
+
+  @override
+  void didChangeInputControl(
+      TextInputControl? oldControl, TextInputControl? newControl) {}
+
+  @override
+  void performSelector(String selectorName) {
+    // TODO: implement performSelector
+  }
+
+  @override
+  void insertContent(KeyboardInsertedContent content) {
+    // TODO: implement insertContent
   }
 }
